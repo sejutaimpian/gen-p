@@ -12,7 +12,16 @@
             darkMode: 'selector',
             theme: {
                 extend: {
-                }
+                    keyframes: {
+                        progress: {
+                            "0%": { transform: "translateX(-100%)" },
+                            "100%": { transform: "translateX(0)" },
+                        },
+                    },
+                    animation: {
+                        progress: "progress 3500ms 1",
+                    },
+                },
             }
         }
     </script>
@@ -28,7 +37,7 @@
                 font-family: "Inter", system-ui, sans-serif;
                 scroll-behavior: smooth;
             }
-            body{
+            body {
                 @apply antialiased min-h-svh;
             }
             h1, h2, h3, h4, h5, h6 {
@@ -66,6 +75,19 @@
         [x-cloak] {
             display: none !important;
         }
+
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Hide scrollbar for IE, Edge and Firefox */
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            /* IE and Edge */
+            scrollbar-width: none;
+            /* Firefox */
+        }
     </style>
 
     <!-- plugin alpineJS, myScript, core alpineJS -->
@@ -73,9 +95,102 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 
-<body class="text-gray-900 bg-white dark:bg-gray-900 dark:text-gray-100">
-    <button @click='isDark = !isDark'>Toggle darkMode</button>
-    <h1>Roboto</h1>
+<body class="grid text-gray-900 bg-white place-content-center dark:bg-gray-900 dark:text-gray-100"
+    @keyup.ctrl.shift.l='isDark = !isDark'
+    @keyup.ctrl.shift.h="Alpine.$data(document.querySelector('#toast')).setToast('success', 'Berasil')">
+    <main class="p-3 border border-slate-300 dark:border-slate-700 rounded-xl w-96 ">
+        <section class="">
+            <h1 class="mb-4 text-center">
+                Password Generator
+            </h1>
+            <div x-data="{ 
+                generatedPassword: 'Hello World',
+                async copyGeneratedPassword(){
+                    try{
+                        await navigator.clipboard.writeText(this.generatedPassword)
+                        this.isCopied = true;
+                        setTimeout(() => (this.isCopied = false), 2000);
+                        Alpine.$data(document.querySelector('#toast')).setToast('success', 'Password successfully copied!')
+                    } catch (err){
+                        Alpine.$data(document.querySelector('#toast')).setToast('danger', 'Password failed to copy!')
+                    }
+                },
+                isCopied: false
+            }" class="relative text-slate-700 dark:text-slate-300">
+                <input type="text"
+                    class="w-full py-2 pl-2 text-sm border pr-9 rounded-xl border-slate-300 bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 disabled:cursor-not-allowed disabled:opacity-75 dark:border-slate-700 dark:bg-slate-800/50 dark:focus-visible:outline-blue-600"
+                    name="password" :value="generatedPassword ?? ''" placeholder="Password akan muncul di sini" />
+                <button type="button" @click="copyGeneratedPassword" title="copy to clipboard" :disabled="isCopied"
+                    :class="isCopied && 'cursor-none'"
+                    class="absolute inset-y-0 right-0 px-2 text-slate-700 dark:text-slate-300"
+                    aria-label="Show password">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                        stroke="currentColor" class="size-5" x-show="!isCopied" x-cloak>
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M15.666 3.888A2.25 2.25 0 0 0 13.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 0 1-.75.75H9a.75.75 0 0 1-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 0 1-2.25 2.25H6.75A2.25 2.25 0 0 1 4.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 0 1 1.927-.184" />
+                    </svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                        stroke="currentColor" class="size-5" x-show="isCopied" x-cloak>
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M11.35 3.836c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m8.9-4.414c.376.023.75.05 1.124.08 1.131.094 1.976 1.057 1.976 2.192V16.5A2.25 2.25 0 0 1 18 18.75h-2.25m-7.5-10.5H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V18.75m-7.5-10.5h6.375c.621 0 1.125.504 1.125 1.125v9.375m-8.25-3 1.5 1.5 3-3.75" />
+                    </svg>
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Element yang absolute -->
+    <!-- Toast -->
+    <div id="toast" role="alert"
+        class="fixed z-10 inline-flex max-w-sm overflow-hidden text-gray-800 bg-white border rounded-lg shadow-md dark:border-slate-700 border-slate-300 dark:bg-gray-950 dark:text-gray-100 top-14 right-4 sm:w-1/2"
+        x-show="isShow" x-transition.opacity.out.duration.500ms x-cloak x-data='{
+        data: {
+            bgStyle: "",
+            message: "",
+            status: "",
+            textStyle: "",
+        },
+        isShow: false,
+        setToast(status, message) {
+            this.data.status = status;
+            this.data.message = message;
+            if (status == "danger") {
+                this.data.bgStyle = "bg-red-500";
+                this.data.textStyle = "text-red-500";
+            }
+            if (status == "warning") {
+                this.data.bgStyle = "bg-yellow-500";
+                this.data.textStyle = "text-yellow-500";
+            }
+            if (status == "info") {
+                this.data.bgStyle = "bg-blue-500";
+                this.data.textStyle = "text-blue-500";
+            }
+            if (status == "success") {
+                this.data.bgStyle = "bg-green-500";
+                this.data.textStyle = "text-green-500";
+            }
+
+            this.isShow = true;
+            setTimeout(() => (this.isShow = false), 2000);
+        }
+      }'>
+        <div class="flex items-center justify-center w-12 pb-1" :class="data.bgStyle">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+                class="w-6 h-6 text-white fill-current">
+                <path fill-rule="evenodd"
+                    d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z"
+                    clip-rule="evenodd" />
+            </svg>
+        </div>
+        <div class="flex-1 px-4 pt-2 pb-3">
+            <span class="font-semibold capitalize" :class="data.textStyle" x-text="data.status"></span>
+            <p class="text-sm" x-text="data.message"></p>
+        </div>
+        <div class="absolute bottom-0 left-0 right-0 w-full h-1 bg-gray-100 group">
+            <span class="absolute top-0 bottom-0 left-0 w-full h-full animate-progress" :class="data.bgStyle"></span>
+        </div>
+    </div>
 </body>
 
 </html>

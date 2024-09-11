@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gen-P</title>
+    <link rel="shortcut icon" href="gen-p-logo.png" type="image/x-icon">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -19,7 +20,7 @@
                         },
                     },
                     animation: {
-                        progress: "progress 3500ms 1",
+                        progress: "progress 3s 1",
                     },
                 },
             }
@@ -95,16 +96,22 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 
-<body class="grid text-gray-900 bg-white place-content-center dark:bg-gray-900 dark:text-gray-100"
-    @keyup.ctrl.shift.l='isDark = !isDark'
-    @keyup.ctrl.shift.h="Alpine.$data(document.querySelector('#toast')).setToast('success', 'Berasil')">
-    <main class="p-3 border border-slate-300 dark:border-slate-700 rounded-xl w-96 ">
-        <section class="">
-            <h1 class="mb-4 text-center">
-                Password Generator
-            </h1>
-            <div x-data="{ 
-                generatedPassword: 'Hello World',
+<body class="flex items-center justify-center text-gray-900 bg-white min-h-svh dark:bg-gray-900 dark:text-gray-100"
+    @keyup.ctrl.space='isDark = !isDark' @keydown.ctrl.g.prevent @keydown.ctrl.l.prevent @keydown.ctrl.u.prevent
+    @keydown.num-lock.prevent @keydown.ctrl.s.prevent @keydown.ctrl.space.prevent
+    @keyup.ctrl.c="Alpine.$data(document.querySelector('#password')).copyGeneratedPassword()"
+    @keyup.ctrl.g="Alpine.$data(document.querySelector('#password')).generatePassword()"
+    @keyup.escape="Alpine.$data(document.querySelector('#password')).generatedPassword = ''"
+    @keydown.page-up="Alpine.$data(document.querySelector('#password')).passwordOption.length++"
+    @keydown.up="Alpine.$data(document.querySelector('#password')).passwordOption.length++"
+    @keydown.down="Alpine.$data(document.querySelector('#password')).passwordOption.length--"
+    @keydown.page-down="Alpine.$data(document.querySelector('#password')).passwordOption.length--"
+    @keyup.ctrl.l="Alpine.$data(document.querySelector('#password')).passwordOption.hasLowerCase = !Alpine.$data(document.querySelector('#password')).passwordOption.hasLowerCase"
+    @keyup.ctrl.u="Alpine.$data(document.querySelector('#password')).passwordOption.hasUpperCase = !Alpine.$data(document.querySelector('#password')).passwordOption.hasUpperCase"
+    @keyup.num-lock="Alpine.$data(document.querySelector('#password')).passwordOption.hasNumber = !Alpine.$data(document.querySelector('#password')).passwordOption.hasNumber"
+    @keyup.ctrl.s="Alpine.$data(document.querySelector('#password')).passwordOption.hasSymbol = !Alpine.$data(document.querySelector('#password')).passwordOption.hasSymbol">
+    <main class="w-full max-w-md p-3 mx-4 border border-slate-300 dark:border-slate-700 rounded-xl">
+        <section id="password" class="space-y-2" x-data="{ 
                 async copyGeneratedPassword(){
                     try{
                         await navigator.clipboard.writeText(this.generatedPassword)
@@ -115,10 +122,54 @@
                         Alpine.$data(document.querySelector('#toast')).setToast('danger', 'Password failed to copy!')
                     }
                 },
-                isCopied: false
-            }" class="relative text-slate-700 dark:text-slate-300">
+                generatedPassword: '',
+                generatePassword(){
+                    if(this.passwordOption.length < 4) return Alpine.$data(document.querySelector('#toast')).setToast('danger', 'Password length must be gratter than 3');
+                    if(this.randomFunc.length === 0) return Alpine.$data(document.querySelector('#toast')).setToast('danger', 'You have to choose the password option');
+                    
+                    this.generatedPassword = ''
+                    for(let i=0; i<this.passwordOption.length; i++){
+                        const randomNumberToChooseFunction = Math.floor(Math.random() * this.randomFunc.length)
+                        this.generatedPassword += this.randomFunc[randomNumberToChooseFunction]()
+                    }
+                    Alpine.$data(document.querySelector('#toast')).setToast('info', 'Password successfully generated')
+                },
+                getRandomLowerCase(){
+                    return String.fromCharCode(Math.floor(Math.random() * 26) + 97);
+                },
+                getRandomUpperCase(){
+                    return String.fromCharCode(Math.floor(Math.random() * 26) + 65);
+                },
+                getRandomNumber(){
+                    return +String.fromCharCode(Math.floor(Math.random() * 10) + 48);
+                },
+                getRandomSymbol(){
+                    const symbols = '!@#$%^&*(){}[]=<>/,.'
+                    return symbols[Math.floor(Math.random() * symbols.length)];
+                },
+                isCopied: false,
+                passwordOption: $persist({
+                    length: 40,
+                    hasLowerCase: false,
+                    hasUpperCase: false,
+                    hasNumber: false,
+                    hasSymbol: true,
+                }),
+                get randomFunc(){
+                    let data = []
+                    if(this.passwordOption.hasLowerCase) data.push(this.getRandomLowerCase)
+                    if(this.passwordOption.hasUpperCase) data.push(this.getRandomUpperCase)
+                    if(this.passwordOption.hasNumber) data.push(this.getRandomNumber)
+                    if(this.passwordOption.hasSymbol) data.push(this.getRandomSymbol)
+                    return data
+                }
+            }">
+            <h1 class="mb-4 text-center">
+                Password Generator
+            </h1>
+            <div class="relative text-slate-700 dark:text-slate-300">
                 <input type="text"
-                    class="w-full py-2 pl-2 text-sm border pr-9 rounded-xl border-slate-300 bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 disabled:cursor-not-allowed disabled:opacity-75 dark:border-slate-700 dark:bg-slate-800/50 dark:focus-visible:outline-blue-600"
+                    class="w-full py-2 pl-2 text-sm border pr-9 rounded-xl border-slate-300 bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-75 dark:border-slate-700 dark:bg-slate-800/50"
                     name="password" :value="generatedPassword ?? ''" placeholder="Password akan muncul di sini" />
                 <button type="button" @click="copyGeneratedPassword" title="copy to clipboard" :disabled="isCopied"
                     :class="isCopied && 'cursor-none'"
@@ -136,6 +187,41 @@
                     </svg>
                 </button>
             </div>
+            <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5 justify-evenly">
+                <button type="button"
+                    class="px-4 py-2 text-sm font-medium tracking-wide text-center transition bg-transparent rounded-full cursor-pointer whitespace-nowrap hover:opacity-75 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 active:opacity-100 active:outline-offset-0 disabled:opacity-75 disabled:cursor-not-allowed dark:focus-visible:outline-white"
+                    x-bind:class="passwordOption.hasLowerCase && 'bg-slate-900 text-slate-300 dark:text-slate-700 dark:bg-white'"
+                    @click="passwordOption.hasLowerCase = !passwordOption.hasLowerCase">
+                    Lower Case</button>
+                <button type="button"
+                    class="px-4 py-2 text-sm font-medium tracking-wide text-center transition bg-transparent rounded-full cursor-pointer whitespace-nowrap hover:opacity-75 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 active:opacity-100 active:outline-offset-0 disabled:opacity-75 disabled:cursor-not-allowed dark:focus-visible:outline-white"
+                    x-bind:class="passwordOption.hasUpperCase && 'bg-slate-900 text-slate-300 dark:text-slate-700 dark:bg-white'"
+                    @click="passwordOption.hasUpperCase = !passwordOption.hasUpperCase">
+                    Upper Case</button>
+                <button type="button"
+                    class="px-4 py-2 text-sm font-medium tracking-wide text-center transition bg-transparent rounded-full cursor-pointer whitespace-nowrap hover:opacity-75 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 active:opacity-100 active:outline-offset-0 disabled:opacity-75 disabled:cursor-not-allowed dark:focus-visible:outline-white"
+                    x-bind:class="passwordOption.hasNumber && 'bg-slate-900 text-slate-300 dark:text-slate-700 dark:bg-white'"
+                    @click="passwordOption.hasNumber = !passwordOption.hasNumber">
+                    Number</button>
+                <button type="button"
+                    class="px-4 py-2 text-sm font-medium tracking-wide text-center transition bg-transparent rounded-full cursor-pointer whitespace-nowrap hover:opacity-75 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 active:opacity-100 active:outline-offset-0 disabled:opacity-75 disabled:cursor-not-allowed dark:focus-visible:outline-white"
+                    x-bind:class="passwordOption.hasSymbol && 'bg-slate-900 text-slate-300 dark:text-slate-700 dark:bg-white'"
+                    @click="passwordOption.hasSymbol = !passwordOption.hasSymbol">
+                    Symbol</button>
+            </div>
+            <div class="flex items-center gap-x-6">
+                <p>Character Length:</p>
+                <input type="number" name="passwordLength" placeholder="Type number here"
+                    class="flex-1 px-2 py-2 text-sm bg-transparent border-b border-slate-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-700 disabled:cursor-not-allowed disabled:opacity-75"
+                    x-model="passwordOption.length" />
+            </div>
+            <div class="w-full">
+                <button type="button" @click="generatePassword()"
+                    class="w-full px-4 py-2 mt-5 font-medium tracking-wide text-center transition bg-blue-700 cursor-pointer whitespace-nowrap rounded-xl text-slate-100 hover:opacity-75 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 active:opacity-100 active:outline-offset-0 disabled:opacity-75 disabled:cursor-not-allowed dark:bg-blue-600 dark:text-slate-100 dark:focus-visible:outline-blue-600">
+                    Generate Password
+                </button>
+            </div>
+
         </section>
     </main>
 
@@ -143,7 +229,7 @@
     <!-- Toast -->
     <div id="toast" role="alert"
         class="fixed z-10 inline-flex max-w-sm overflow-hidden text-gray-800 bg-white border rounded-lg shadow-md dark:border-slate-700 border-slate-300 dark:bg-gray-950 dark:text-gray-100 top-14 right-4 sm:w-1/2"
-        x-show="isShow" x-transition.opacity.out.duration.500ms x-cloak x-data='{
+        x-show="isShow" x-transition x-cloak x-data='{
         data: {
             bgStyle: "",
             message: "",
@@ -172,7 +258,7 @@
             }
 
             this.isShow = true;
-            setTimeout(() => (this.isShow = false), 2000);
+            setTimeout(() => (this.isShow = false), 3000);
         }
       }'>
         <div class="flex items-center justify-center w-12 pb-1" :class="data.bgStyle">
